@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   Compass,
@@ -21,13 +21,13 @@ import {
 import { MdOutlineAutoStories } from "react-icons/md";
 
 const navItems = [
-  { label: "Home", icon: Home },
-  { label: "Explore", icon: Compass },
-  { label: "Categories", icon: LayoutGrid },
-  { label: "My Library", icon: BookOpen },
-  { label: "Favourites", icon: Heart },
-  { label: "Want to Read", icon: Bookmark },
-  { label: "Collections", icon: FolderOpen },
+  { label: "Home",        icon: Home,       href: "/BookCard"   },
+  { label: "Explore",     icon: Compass,    href: "/searchresults" },
+  { label: "Categories", icon: LayoutGrid,  href: "/BookCard"   },
+  { label: "My Library", icon: BookOpen,    href: "/BookCard"   },
+  { label: "Favourites", icon: Heart,       href: "/favourite"  },
+  { label: "Want to Read", icon: Bookmark,  href: "/BookCard"   },
+  { label: "Collections", icon: FolderOpen, href: "/BookCard"   },
 ];
 
 const genres = [
@@ -42,7 +42,11 @@ const genres = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const [activeNav, setActiveNav] = useState("Home");
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Derive active nav from current URL
+  const activeNav = navItems.find((item) => pathname === item.href)?.label ?? "Home";
 
   return (
     <>
@@ -84,14 +88,14 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Nav Items */}
         <nav className="flex flex-col gap-1 shrink-0">
-          {navItems.map(({ label, icon: Icon }) => {
+          {navItems.map(({ label, icon: Icon, href }) => {
             const isActive = activeNav === label;
             return (
               <button
                 key={label}
                 onClick={() => {
-                  setActiveNav(label);
-                  if (onClose) onClose(); // close mobile sidebar on navigation
+                  router.push(href);
+                  if (onClose) onClose();
                 }}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 w-full text-left group
                   ${isActive

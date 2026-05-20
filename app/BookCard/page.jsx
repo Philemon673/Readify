@@ -14,6 +14,7 @@ import {
   Menu,
 } from "lucide-react";
 import Sidebar from "../../components/sidebar";
+import SearchBar from "../../components/search";
 
 /* ─── DATA ──────────────────────────────────────────────────────────── */
 const recentlyAdded = [
@@ -627,14 +628,7 @@ export default function ReadifyPage() {
           </button>
 
           {/* Expanded Search Input */}
-          <div className="flex-1 max-w-lg relative group">
-            <input
-              type="text"
-              placeholder="Search by title, author, or genre..."
-              className="w-full bg-[#120e24]/30 border border-[#582fff]/20 rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-[#582fff]/60 focus:bg-[#120e24]/60 focus:shadow-[0_0_22px_rgba(88,47,255,0.3)] shadow-[0_0_15px_rgba(88,47,255,0.06)] transition-all font-semibold"
-            />
-            <Search size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#582fff] transition-colors duration-200" />
-          </div>
+          <SearchBar />
 
           {/* Profile and Bell */}
           <div className="ml-auto flex items-center gap-3">
