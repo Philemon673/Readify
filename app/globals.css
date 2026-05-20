@@ -90,7 +90,25 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* Full viewport coverage — fixes background image gaps */
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Safari, Chrome, Opera, and other WebKit engines */
   }
 }

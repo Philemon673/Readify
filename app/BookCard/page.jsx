@@ -13,7 +13,7 @@ import {
   Crown,
   Menu,
 } from "lucide-react";
-import Sidebar from "../../../components/sidebar";
+import Sidebar from "../../components/sidebar";
 
 /* ─── DATA ──────────────────────────────────────────────────────────── */
 const recentlyAdded = [
@@ -407,7 +407,7 @@ function BookCoverIllustration({ book }) {
       );
     case "1984":
       return (
-        <div className="absolute inset-0 bg-[#161616] flex flex-col justify-between p-3 border-r border-neutral-500/20">
+        <div className="absolute inset-0 bg-[#161616] flex flex-col justify-between p-3 border-r border-neutral-500/10">
           <div className="w-full text-center mt-2 z-10">
             <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider">GEORGE ORWELL</span>
           </div>
@@ -423,7 +423,7 @@ function BookCoverIllustration({ book }) {
       );
     case "Pride and Prejudice":
       return (
-        <div className="absolute inset-0 bg-[#250d13] flex flex-col justify-between p-3 border-r border-rose-500/20">
+        <div className="absolute inset-0 bg-[#250d13] flex flex-col justify-between p-3 border-r border-rose-500/10">
           <div className="w-full text-center mt-2 z-10">
             <span className="text-[8px] text-rose-400 font-bold uppercase tracking-wider">JANE AUSTEN</span>
           </div>
@@ -443,7 +443,7 @@ function BookCoverIllustration({ book }) {
       );
     case "The Alchemist":
       return (
-        <div className="absolute inset-0 bg-[#241a05] flex flex-col justify-between p-3 border-r border-amber-500/20">
+        <div className="absolute inset-0 bg-[#241a05] flex flex-col justify-between p-3 border-r border-amber-500/10">
           <div className="w-full text-center mt-2 z-10">
             <span className="text-[8px] text-amber-400 font-bold uppercase tracking-wider">PAULO COELHO</span>
           </div>
@@ -669,11 +669,11 @@ export default function ReadifyPage() {
                 Explore books that inspire, entertain, and stay with you forever.
               </p>
               <div className="flex items-center gap-4">
-                <button className="flex items-center gap-2 bg-[#582fff] hover:bg-[#7651ff] active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-[#582fff]/20 group">
+                <button className="flex items-center gap-2 bg-gradient-to-r from-purple-700 via-violet-600 to-fuchsia-600 hover:from-purple-600 hover:via-violet-500 hover:to-fuchsia-500 text-white text-sm px-6 py-2.5 rounded-sm font-semibold transition-all shadow-lg shadow-purple-700/40 hover:shadow-purple-500/50">
                   Explore Now
                   <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                 </button>
-                <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all backdrop-blur-sm">
+                <button className="flex items-center gap-2 bg-white/[0.08] hover:bg-white/[0.14] border border-white/20 text-white text-sm px-6 py-2.5 rounded-sm font-medium transition-all">
                   My Library
                 </button>
               </div>
@@ -690,12 +690,12 @@ export default function ReadifyPage() {
               <img
                 src="/readify-banner.png"
                 alt="Cozy library illustration"
-                className="w-full h-full object-cover object-right mix-blend-screen opacity-100 contrast-[1.08] brightness-[1.04]"
+                className="w-full h-full object-cover object-right object-bottom mix-blend-screen opacity-100 contrast-[1.08] brightness-[1.04]"
               />
             </div>
 
             {/* Ambient bottom blend overlay to dissolve into page background */}
-            <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#06040d] to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#06040d] to-transparent z-30 pointer-events-none" />
           </div>
 
           {/* Recently Added */}
