@@ -4,6 +4,10 @@ import { useState, useMemo } from "react";
 import { Heart, Star, ChevronDown, ChevronLeft, ChevronRight, Trash2, BookOpen } from "lucide-react";
 import { MdOutlineAutoStories } from "react-icons/md";
 import { PiHeartFill } from "react-icons/pi";
+import { useRouter } from "next/navigation";
+import Sidebar from "../../components/sidebar";
+import Navbar from "../../components/navbar";
+import BookModal from "../searchresults/bookmodal";
 
 /* ─── DATA ───────────────────────────────────────────────────────────── */
 const INITIAL_FAVOURITES = [
@@ -89,14 +93,16 @@ function SortDropdown({ value, onChange }) {
 }
 
 /* ─── BOOK CARD ──────────────────────────────────────────────────────── */
-function FavouriteCard({ book, onUnfavourite }) {
+function FavouriteCard({ book, onUnfavourite, onOpen }) {
   const [hovered, setHovered] = useState(false);
+  const router = useRouter();
 
   return (
     <div
       className="group flex flex-col cursor-pointer"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => onOpen(book)}
     >
       {/* Cover */}
       <div className={`relative w-full aspect-[2/3] rounded-xl bg-gradient-to-br ${book.bg} overflow-hidden shadow-lg shadow-black/50 border border-white/5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-violet-950/60`}>
@@ -129,7 +135,20 @@ function FavouriteCard({ book, onUnfavourite }) {
 
         {/* Hover overlay */}
         <div className={`absolute inset-0 bg-black/55 flex flex-col items-center justify-end pb-4 gap-2 transition-opacity duration-200 ${hovered ? "opacity-100" : "opacity-0"}`}>
-          <button className="flex items-center gap-1.5 text-white text-[11px] font-semibold bg-violet-600/80 hover:bg-violet-600 px-3 py-1.5 rounded-full backdrop-blur-sm transition-all">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const bookData = {
+                title: book.title,
+                author: book.author,
+                totalPages: book.pages || 304,
+                cover: "📖",
+              };
+              localStorage.setItem("currentBook", JSON.stringify(bookData));
+              router.push("/read");
+            }}
+            className="flex items-center gap-1.5 text-white text-[11px] font-semibold bg-violet-600/80 hover:bg-violet-600 px-3 py-1.5 rounded-full backdrop-blur-sm transition-all"
+          >
             <BookOpen size={11} />
             Read Now
           </button>
@@ -235,10 +254,12 @@ function EmptyState() {
 
 /* ─── MAIN ───────────────────────────────────────────────────────────── */
 export default function MyFavourites() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [books, setBooks] = useState(ALL_INITIAL);
   const [sort, setSort]         = useState("date_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [removed, setRemoved]   = useState(null);
+  const [selectedBook, setSelectedBook] = useState(null);
 
   const sorted = useMemo(() => {
     const list = [...books];
@@ -275,8 +296,18 @@ export default function MyFavourites() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0e17] text-white px-6 py-8 font-sans">
-      <div className="max-w-5xl mx-auto">
+    <div className="flex min-h-screen bg-[#06040d] font-sans text-gray-100 overflow-x-hidden">
+      {/* Responsive Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Top Nav */}
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+
+        {/* Scrollable body */}
+        <main className="flex-1 overflow-y-auto no-scrollbar px-8 py-8">
+          <div className="max-w-5xl mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
@@ -299,6 +330,7 @@ export default function MyFavourites() {
                   key={book.id}
                   book={book}
                   onUnfavourite={handleUnfavourite}
+                  onOpen={setSelectedBook}
                 />
               ))}
             </div>
@@ -321,6 +353,9 @@ export default function MyFavourites() {
         )}
       </div>
 
+        </main>
+      </div>
+
       {/* Undo toast */}
       {removed && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#1e1b2e] border border-white/10 rounded-2xl px-5 py-3 shadow-2xl shadow-black/60 animate-in slide-in-from-bottom-4 duration-300">
@@ -335,6 +370,10 @@ export default function MyFavourites() {
             Undo
           </button>
         </div>
+      )}
+      {/* Modal */}
+      {selectedBook && (
+        <BookModal book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
     </div>
   );

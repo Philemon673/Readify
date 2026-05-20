@@ -14,7 +14,8 @@ import {
   Menu,
 } from "lucide-react";
 import Sidebar from "../../components/sidebar";
-import SearchBar from "../../components/search";
+import Navbar from "../../components/navbar";
+import BookModal from "../searchresults/bookmodal";
 
 /* ─── DATA ──────────────────────────────────────────────────────────── */
 const recentlyAdded = [
@@ -524,11 +525,14 @@ function BookCoverIllustration({ book }) {
 
 /* ─── SUB-COMPONENTS ─────────────────────────────────────────────────── */
 
-function BookCard({ book, showRank = false }) {
+function BookCard({ book, showRank = false, onOpen }) {
   const [liked, setLiked] = useState(false);
 
   return (
-    <div className="group relative flex flex-col cursor-pointer shrink-0 w-[140px] select-none">
+    <div
+      onClick={() => onOpen && onOpen(book)}
+      className="group relative flex flex-col cursor-pointer shrink-0 w-[140px] select-none"
+    >
       {/* Cover Container */}
       <div className="relative w-full h-[200px] rounded-2xl overflow-hidden shadow-lg shadow-black/50 border border-white/5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-[#582fff]/20 group-hover:border-[#582fff]/40">
         {/* Realistic book spine lighting effect */}
@@ -605,6 +609,7 @@ function SectionHeader({ title, icon }) {
 /* ─── MAIN PAGE ──────────────────────────────────────────────────────── */
 export default function ReadifyPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
 
   return (
     <div className="flex min-h-screen bg-[#06040d] font-sans text-gray-100 overflow-x-hidden">
@@ -614,36 +619,7 @@ export default function ReadifyPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Nav */}
-        <header className="relative h-16 flex items-center px-6 gap-4 bg-[#080510]/60 backdrop-blur-xl sticky top-0 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.5),_inset_0_1px_0_0_rgba(255,255,255,0.05)] border-b border-white/[0.06] transition-all duration-300">
-          {/* Glass Glow Ambient Background Effect */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,47,255,0.12),transparent_75%)] pointer-events-none" />
-
-          {/* Mobile hamburger menu button */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 -ml-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all"
-            aria-label="Open navigation sidebar"
-          >
-            <Menu size={20} />
-          </button>
-
-          {/* Expanded Search Input */}
-          <SearchBar />
-
-          {/* Profile and Bell */}
-          <div className="ml-auto flex items-center gap-3">
-            <button className="relative w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-[#582fff] transition-all bg-white/5">
-              <Bell size={16} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#582fff] rounded-full border-2 border-[#080510]" />
-            </button>
-            <button className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#582fff] to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-[#582fff]/40">
-                U
-              </div>
-              <ChevronRight size={14} className="text-gray-500 rotate-90 group-hover:text-white transition-colors" />
-            </button>
-          </div>
-        </header>
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Scrollable body */}
         <main className="flex-1 overflow-y-auto no-scrollbar px-8 pt-0 pb-6 space-y-8">
@@ -697,7 +673,7 @@ export default function ReadifyPage() {
             <SectionHeader title="Recently Added" />
             <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/5 hover:scrollbar-thumb-white/10 scrollbar-track-transparent">
               {recentlyAdded.map((book) => (
-                <BookCard key={book.title} book={book} />
+                <BookCard key={book.title} book={book} onOpen={setSelectedBook} />
               ))}
             </div>
           </section>
@@ -710,7 +686,7 @@ export default function ReadifyPage() {
             />
             <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/5 hover:scrollbar-thumb-white/10 scrollbar-track-transparent">
               {trending.map((book) => (
-                <BookCard key={book.title} book={book} showRank />
+                <BookCard key={book.title} book={book} showRank onOpen={setSelectedBook} />
               ))}
             </div>
           </section>
@@ -723,13 +699,17 @@ export default function ReadifyPage() {
             />
             <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/5 hover:scrollbar-thumb-white/10 scrollbar-track-transparent">
               {popularPicks.map((book) => (
-                <BookCard key={book.title} book={book} />
+                <BookCard key={book.title} book={book} onOpen={setSelectedBook} />
               ))}
             </div>
           </section>
 
         </main>
       </div>
+      {/* Modal */}
+      {selectedBook && (
+        <BookModal book={selectedBook} onClose={() => setSelectedBook(null)} />
+      )}
     </div>
   );
 }

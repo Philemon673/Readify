@@ -17,7 +17,7 @@ import {
   ChevronRight,
   Flame,
 } from "lucide-react";
-
+import BookModal from "../../app/searchresults/bookmodal";
 /* ── Nav links ── */
 const navLinks = [
   { label: "Home",       href: "/" },
@@ -99,12 +99,15 @@ const features = [
 ];
 
 /* ── Book Card ── */
-function BookCard({ book }) {
+function BookCard({ book, onOpen }) {
   const [liked, setLiked] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div className="flex flex-col gap-2 min-w-[115px] group cursor-pointer shrink-0">
+    <div
+      onClick={() => onOpen && onOpen(book)}
+      className="flex flex-col gap-2 min-w-[115px] group cursor-pointer shrink-0"
+    >
       {/* Cover */}
       <div
         className="relative rounded-xl overflow-hidden h-[168px] w-[115px] shadow-2xl transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-purple-900/50"
@@ -175,12 +178,13 @@ export default function HomePage() {
   const pathname = usePathname();
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [searchVal, setSearchVal] = useState("");
+  const [selectedBook, setSelectedBook] = useState(null);
 
   function handleSearch(e) {
     e.preventDefault();
     const q = searchVal.trim();
     if (q) {
-      router.push(`/search?q=${encodeURIComponent(q)}`);
+      router.push(`/searchresults?q=${encodeURIComponent(q)}`);
       setMenuOpen(false);
     }
   }
@@ -422,7 +426,7 @@ export default function HomePage() {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {books.map((book) => (
-              <BookCard key={book.id} book={book} />
+              <BookCard key={book.id} book={book} onOpen={setSelectedBook} />
             ))}
           </div>
         </section>
@@ -440,6 +444,11 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* Modal */}
+        {selectedBook && (
+          <BookModal book={selectedBook} onClose={() => setSelectedBook(null)} />
+        )}
 
       </div>
     </div>

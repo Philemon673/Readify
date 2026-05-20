@@ -8,7 +8,7 @@ import {
   Menu, Bell,
 } from "lucide-react";
 import Sidebar from "../../components/sidebar";
-import SearchBar from "../../components/search";
+import Navbar from "../../components/navbar";
 import { MdOutlineAutoStories } from "react-icons/md";
 import { PiBookmarkSimpleFill } from "react-icons/pi";
 import { GiBookshelf } from "react-icons/gi";
@@ -57,135 +57,7 @@ const SORT_OPTIONS = [
 
 const PER_PAGE = 8;
 
-/* ─── BOOK DETAIL MODAL ──────────────────────────────────────────────── */
-function BookModal({ book, onClose }) {
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [added, setAdded] = useState(false);
-
-  // Close on Escape key
-  useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-
-      {/* Modal */}
-      <div
-        className="relative z-10 w-full max-w-xl bg-[#16141f] border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Top gradient strip */}
-        <div className={`h-1.5 w-full bg-gradient-to-r ${book.bg}`} />
-
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
-        >
-          <X size={15} />
-        </button>
-
-        <div className="flex gap-6 p-6 pb-5">
-          {/* Cover thumbnail */}
-          <div className={`shrink-0 w-28 h-40 rounded-xl bg-gradient-to-br ${book.bg} border border-white/10 shadow-lg shadow-black/50 flex flex-col items-center justify-center p-2 gap-1`}>
-            <MdOutlineAutoStories size={22} style={{ color: book.color }} />
-            <p className="text-center text-[9px] font-extrabold uppercase leading-tight" style={{ color: book.color }}>
-              {book.title.replace("Harry Potter and the ", "").replace("Harry Potter: ", "").replace("Harry Potter – ", "").slice(0, 40)}
-            </p>
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-white font-bold text-base leading-snug mb-1">{book.title}</h2>
-            <div className="flex items-center gap-1.5 mb-3">
-              <div className="flex items-center gap-1">
-                {[1,2,3,4,5].map((s) => (
-                  <Star key={s} size={11} className={s <= Math.round(book.rating) ? "fill-amber-400 text-amber-400" : "fill-white/10 text-white/10"} />
-                ))}
-              </div>
-              <span className="text-amber-400 text-xs font-bold">{book.rating}</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
-              <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                <User size={11} className="text-violet-400 shrink-0" />
-                <span className="truncate">{book.author}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                <Calendar size={11} className="text-violet-400 shrink-0" />
-                <span>{book.year}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                <Tag size={11} className="text-violet-400 shrink-0" />
-                <span>{book.genre}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                <BookOpen size={11} className="text-violet-400 shrink-0" />
-                <span>{book.pages} pages</span>
-              </div>
-            </div>
-
-            {/* Availability badge */}
-            <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-400 text-[11px] font-semibold">Available in Library</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="px-6 pb-5">
-          <p className="text-gray-400 text-sm leading-relaxed line-clamp-3">{book.desc}</p>
-        </div>
-
-        {/* Divider */}
-        <div className="mx-6 h-px bg-white/5" />
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-3 p-5">
-          {/* Primary — Read Now */}
-          <button
-            onClick={() => setAdded(!added)}
-            className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold py-2.5 rounded-xl transition-all shadow-md shadow-violet-900/40 group"
-          >
-            <GiBookshelf size={16} />
-            {added ? "Added to Library" : "Read Now"}
-          </button>
-
-          {/* Explore More — key CTA */}
-          <button className="flex-1 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/50 text-white text-sm font-semibold py-2.5 rounded-xl transition-all group">
-            <Compass size={15} className="text-violet-400 group-hover:rotate-12 transition-transform" />
-            Explore More
-            <ArrowRight size={13} className="text-violet-400 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-
-          {/* Icon actions */}
-          <button
-            onClick={() => setLiked(!liked)}
-            className="w-10 h-10 rounded-xl border border-white/10 hover:border-rose-500/40 bg-white/5 flex items-center justify-center transition-all"
-          >
-            <Heart size={15} className={liked ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-400"} />
-          </button>
-          <button
-            onClick={() => setSaved(!saved)}
-            className="w-10 h-10 rounded-xl border border-white/10 hover:border-violet-500/40 bg-white/5 flex items-center justify-center transition-all"
-          >
-            <PiBookmarkSimpleFill size={15} className={saved ? "text-violet-400" : "text-gray-400"} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import BookModal from "./bookmodal";
 
 /* ─── BOOK CARD ──────────────────────────────────────────────────────── */
 function BookCard({ book, onOpen }) {
@@ -375,36 +247,7 @@ function SearchResultsInner() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Nav */}
-        <header className="relative h-16 flex items-center px-6 gap-4 bg-[#080510]/60 backdrop-blur-xl sticky top-0 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.5),_inset_0_1px_0_0_rgba(255,255,255,0.05)] border-b border-white/[0.06] transition-all duration-300">
-          {/* Glass Glow Ambient Background Effect */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,47,255,0.12),transparent_75%)] pointer-events-none" />
-
-          {/* Mobile hamburger menu button */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 -ml-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all"
-            aria-label="Open navigation sidebar"
-          >
-            <Menu size={20} />
-          </button>
-
-          {/* Search input — seeded with current query, live search on typing */}
-          <SearchBar value={query} />
-
-          {/* Profile and Bell */}
-          <div className="ml-auto flex items-center gap-3">
-            <button className="relative w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-[#582fff] transition-all bg-white/5">
-              <Bell size={16} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#582fff] rounded-full border-2 border-[#080510]" />
-            </button>
-            <button className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#582fff] to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-[#582fff]/40">
-                U
-              </div>
-              <ChevronRight size={14} className="text-gray-500 rotate-90 group-hover:text-white transition-colors" />
-            </button>
-          </div>
-        </header>
+        <Navbar onMenuClick={() => setSidebarOpen(true)} searchValue={query} />
 
         {/* Scrollable body */}
         <main className="flex-1 overflow-y-auto no-scrollbar px-8 py-8 space-y-6">
