@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 import {
   BookOpen,
   Mail,
@@ -16,6 +17,7 @@ import { FaGoogle, FaApple } from "react-icons/fa";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
@@ -31,11 +33,21 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    // TODO: replace with real API call to /api/auth/login
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await login(email, password);
       router.push("/BookCard");
-    }, 1200);
+    } catch (err) {
+      const errMsg = err.response?.data?.message;
+      if (Array.isArray(errMsg)) {
+        setError(errMsg[0]);
+      } else if (typeof errMsg === "string") {
+        setError(errMsg);
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

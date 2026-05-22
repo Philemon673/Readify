@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Heart, Star, ChevronDown, ChevronLeft, ChevronRight, Trash2, BookOpen } from "lucide-react";
 import { MdOutlineAutoStories } from "react-icons/md";
 import { PiHeartFill } from "react-icons/pi";
@@ -8,40 +8,40 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../../components/sidebar";
 import Navbar from "../../components/navbar";
 import BookModal from "../searchresults/bookmodal";
+import { bookService } from "@/app/services/bookService";
 
-/* ─── DATA ───────────────────────────────────────────────────────────── */
-const INITIAL_FAVOURITES = [
-  { id: 1,  title: "The Midnight Library",              author: "Matt Haig",            rating: 4.6, bg: "from-slate-900 via-blue-900 to-indigo-950",    color: "#93c5fd", dateAdded: "2024-01-10", genre: "Fiction" },
-  { id: 2,  title: "Atomic Habits",                     author: "James Clear",          rating: 4.8, bg: "from-stone-800 via-neutral-700 to-zinc-900",   color: "#fde68a", dateAdded: "2024-01-14", genre: "Self-Help" },
-  { id: 3,  title: "The Seven Husbands of Evelyn Hugo", author: "Taylor Jenkins Reid",  rating: 4.7, bg: "from-amber-900 via-orange-800 to-red-950",     color: "#fdba74", dateAdded: "2024-01-18", genre: "Fiction" },
-  { id: 4,  title: "It Ends With Us",                   author: "Colleen Hoover",       rating: 4.7, bg: "from-pink-900 via-rose-800 to-fuchsia-950",    color: "#fda4af", dateAdded: "2024-01-22", genre: "Romance" },
-  { id: 5,  title: "The Alchemist",                     author: "Paulo Coelho",         rating: 4.6, bg: "from-orange-900 via-amber-800 to-yellow-950",  color: "#fbbf24", dateAdded: "2024-01-25", genre: "Fiction" },
-  { id: 6,  title: "Dune",                              author: "Frank Herbert",         rating: 4.8, bg: "from-yellow-900 via-orange-800 to-red-950",   color: "#fde68a", dateAdded: "2024-01-28", genre: "Sci-Fi" },
-  { id: 7,  title: "The Power of Habit",                author: "Charles Duhigg",       rating: 4.5, bg: "from-orange-800 via-amber-700 to-yellow-900",  color: "#fdba74", dateAdded: "2024-02-02", genre: "Self-Help" },
-  { id: 8,  title: "Thinking, Fast and Slow",           author: "Daniel Kahneman",      rating: 4.6, bg: "from-zinc-800 via-gray-700 to-slate-900",      color: "#e2e8f0", dateAdded: "2024-02-06", genre: "Psychology" },
-  { id: 9,  title: "Educated",                          author: "Tara Westover",        rating: 4.6, bg: "from-red-900 via-rose-800 to-pink-950",        color: "#fca5a5", dateAdded: "2024-02-10", genre: "Memoir" },
-  { id: 10, title: "Sapiens",                           author: "Yuval Noah Harari",    rating: 4.6, bg: "from-teal-900 via-cyan-800 to-sky-950",        color: "#5eead4", dateAdded: "2024-02-14", genre: "History" },
-  { id: 11, title: "The Psychology of Money",           author: "Morgan Housel",        rating: 4.7, bg: "from-violet-900 via-purple-800 to-indigo-950", color: "#c4b5fd", dateAdded: "2024-02-18", genre: "Finance" },
-  { id: 12, title: "The Subtle Art of Not Giving a F*ck", author: "Mark Manson",       rating: 4.5, bg: "from-gray-800 via-zinc-700 to-neutral-900",    color: "#d4d4d4", dateAdded: "2024-02-22", genre: "Self-Help" },
+/* ─── UTILS ──────────────────────────────────────────────────────────── */
+const GRADIENTS = [
+  { bg: "from-slate-900 via-blue-900 to-indigo-950",    color: "#93c5fd" },
+  { bg: "from-stone-800 via-neutral-700 to-zinc-900",   color: "#fde68a" },
+  { bg: "from-amber-900 via-orange-800 to-red-950",     color: "#fdba74" },
+  { bg: "from-pink-900 via-rose-800 to-fuchsia-950",    color: "#fda4af" },
+  { bg: "from-orange-900 via-amber-800 to-yellow-950",  color: "#fbbf24" },
+  { bg: "from-yellow-900 via-orange-800 to-red-950",    color: "#fde68a" },
+  { bg: "from-violet-900 via-purple-800 to-indigo-950", color: "#c4b5fd" },
+  { bg: "from-teal-900 via-cyan-800 to-sky-950",        color: "#5eead4" },
 ];
 
-// Extra books so pagination is meaningful
-const EXTRA_BOOKS = [
-  { id: 13, title: "The Alchemist – Collector's Ed.", author: "Paulo Coelho",     rating: 4.7, bg: "from-amber-900 via-yellow-800 to-orange-950", color: "#fde68a", dateAdded: "2024-03-01", genre: "Fiction" },
-  { id: 14, title: "Rich Dad Poor Dad",               author: "Robert Kiyosaki",  rating: 4.5, bg: "from-green-900 via-emerald-800 to-teal-950",  color: "#6ee7b7", dateAdded: "2024-03-04", genre: "Finance" },
-  { id: 15, title: "The Pragmatic Programmer",        author: "Andrew Hunt",      rating: 4.6, bg: "from-sky-900 via-blue-800 to-indigo-950",     color: "#7dd3fc", dateAdded: "2024-03-07", genre: "Tech" },
-  { id: 16, title: "Man's Search for Meaning",        author: "Viktor Frankl",    rating: 4.8, bg: "from-neutral-800 via-stone-700 to-zinc-900",  color: "#d4d4d4", dateAdded: "2024-03-10", genre: "Psychology" },
-  { id: 17, title: "The Great Gatsby",                author: "F. Scott Fitzgerald", rating: 4.4, bg: "from-yellow-800 via-amber-700 to-orange-900", color: "#fbbf24", dateAdded: "2024-03-13", genre: "Classic" },
-  { id: 18, title: "1984",                            author: "George Orwell",    rating: 4.7, bg: "from-zinc-900 via-gray-800 to-slate-950",     color: "#a1a1aa", dateAdded: "2024-03-16", genre: "Dystopia" },
-  { id: 19, title: "Brave New World",                 author: "Aldous Huxley",    rating: 4.5, bg: "from-indigo-900 via-violet-800 to-purple-950", color: "#a5b4fc", dateAdded: "2024-03-19", genre: "Dystopia" },
-  { id: 20, title: "The Hitchhiker's Guide",          author: "Douglas Adams",    rating: 4.7, bg: "from-cyan-900 via-sky-800 to-blue-950",       color: "#67e8f9", dateAdded: "2024-03-22", genre: "Sci-Fi" },
-  { id: 21, title: "Becoming",                        author: "Michelle Obama",   rating: 4.8, bg: "from-rose-900 via-pink-800 to-fuchsia-950",   color: "#fda4af", dateAdded: "2024-03-25", genre: "Memoir" },
-  { id: 22, title: "Zero to One",                     author: "Peter Thiel",      rating: 4.5, bg: "from-slate-800 via-gray-700 to-zinc-900",     color: "#cbd5e1", dateAdded: "2024-03-28", genre: "Business" },
-  { id: 23, title: "The Book Thief",                  author: "Markus Zusak",     rating: 4.6, bg: "from-blue-900 via-indigo-800 to-violet-950",  color: "#93c5fd", dateAdded: "2024-04-01", genre: "Fiction" },
-  { id: 24, title: "Meditations",                     author: "Marcus Aurelius",  rating: 4.7, bg: "from-stone-900 via-neutral-800 to-zinc-950",  color: "#d6d3d1", dateAdded: "2024-04-04", genre: "Philosophy" },
-];
-
-const ALL_INITIAL = [...INITIAL_FAVOURITES, ...EXTRA_BOOKS];
+const mapFavouriteToUI = (fav, index) => {
+  const style = GRADIENTS[index % GRADIENTS.length];
+  return {
+    id:           fav.googleBookId,
+    dbId:         fav.id,
+    title:        fav.title,
+    author:       fav.authors || "Unknown Author",
+    rating:       fav.averageRating || 4.5,
+    pages:        fav.pageCount || "—",
+    year:         fav.publishedDate ? fav.publishedDate.split("-")[0] : "—",
+    genre:        fav.genre || "Book",
+    desc:         fav.description || "No description available for this book.",
+    dateAdded:    fav.savedAt || new Date().toISOString(),
+    thumbnail:    fav.thumbnail || null,
+    isReadable:   fav.isReadable ?? false,
+    webReaderLink:fav.webReaderLink ?? null,
+    bg:           style.bg,
+    color:        style.color,
+  };
+};
 
 const PER_PAGE = 12;
 
@@ -92,6 +92,19 @@ function SortDropdown({ value, onChange }) {
   );
 }
 
+/* ─── SHIMMER SKELETON ───────────────────────────────────────────────── */
+function FavouriteCardSkeleton() {
+  return (
+    <div className="flex flex-col animate-pulse">
+      <div className="w-full aspect-[2/3] rounded-xl bg-white/5 border border-white/5" />
+      <div className="mt-2.5 space-y-1.5">
+        <div className="h-3 bg-white/10 rounded w-5/6" />
+        <div className="h-2.5 bg-white/5 rounded w-1/2" />
+      </div>
+    </div>
+  );
+}
+
 /* ─── BOOK CARD ──────────────────────────────────────────────────────── */
 function FavouriteCard({ book, onUnfavourite, onOpen }) {
   const [hovered, setHovered] = useState(false);
@@ -107,43 +120,47 @@ function FavouriteCard({ book, onUnfavourite, onOpen }) {
       {/* Cover */}
       <div className={`relative w-full aspect-[2/3] rounded-xl bg-gradient-to-br ${book.bg} overflow-hidden shadow-lg shadow-black/50 border border-white/5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-violet-950/60`}>
 
-        {/* Heart — always visible, filled rose */}
+        {/* Heart button — always visible */}
         <button
           onClick={(e) => { e.stopPropagation(); onUnfavourite(book.id); }}
-          className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all hover:scale-110 hover:bg-rose-500/20"
+          className="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all hover:scale-110 hover:bg-rose-500/20"
           title="Remove from favourites"
         >
           <PiHeartFill size={13} className="text-rose-500" />
         </button>
 
-        {/* Spine accent */}
-        <div className="absolute left-3 top-0 bottom-0 w-px bg-white/10" />
-
-        {/* Cover art */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-3 gap-1.5">
-          <MdOutlineAutoStories size={20} style={{ color: book.color, opacity: 0.75 }} />
-          <p
-            className="text-center text-[10px] font-extrabold leading-tight uppercase mt-0.5"
-            style={{ color: book.color, textShadow: "0 2px 10px rgba(0,0,0,0.9)" }}
-          >
-            {book.title.length > 32 ? book.title.slice(0, 32) + "…" : book.title}
-          </p>
-          <p className="text-[8px] text-white/40 uppercase tracking-wide mt-0.5">
-            {book.author.split(" ").slice(-1)[0]}
-          </p>
-        </div>
+        {/* Thumbnail or CSS art */}
+        {book.thumbnail ? (
+          <img
+            src={book.thumbnail}
+            alt={book.title}
+            className="absolute inset-0 w-full h-full object-cover z-10"
+            loading="lazy"
+          />
+        ) : (
+          <>
+            <div className="absolute left-3 top-0 bottom-0 w-px bg-white/10 z-10" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-3 gap-1.5 z-10">
+              <MdOutlineAutoStories size={20} style={{ color: book.color, opacity: 0.75 }} />
+              <p
+                className="text-center text-[10px] font-extrabold leading-tight uppercase mt-0.5"
+                style={{ color: book.color, textShadow: "0 2px 10px rgba(0,0,0,0.9)" }}
+              >
+                {book.title.length > 32 ? book.title.slice(0, 32) + "…" : book.title}
+              </p>
+              <p className="text-[8px] text-white/40 uppercase tracking-wide mt-0.5">
+                {book.author.split(" ").slice(-1)[0]}
+              </p>
+            </div>
+          </>
+        )}
 
         {/* Hover overlay */}
-        <div className={`absolute inset-0 bg-black/55 flex flex-col items-center justify-end pb-4 gap-2 transition-opacity duration-200 ${hovered ? "opacity-100" : "opacity-0"}`}>
+        <div className={`absolute inset-0 bg-black/55 flex flex-col items-center justify-end pb-4 gap-2 transition-opacity duration-200 z-30 ${hovered ? "opacity-100" : "opacity-0"}`}>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              const bookData = {
-                title: book.title,
-                author: book.author,
-                totalPages: book.pages || 304,
-                cover: "📖",
-              };
+              const bookData = { title: book.title, author: book.author, totalPages: book.pages || 304, cover: "📖" };
               localStorage.setItem("currentBook", JSON.stringify(bookData));
               router.push("/read");
             }}
@@ -161,9 +178,9 @@ function FavouriteCard({ book, onUnfavourite, onOpen }) {
           </button>
         </div>
 
-        {/* Bottom gradient + rating */}
-        <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-black/80 to-transparent" />
-        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
+        {/* Bottom gradient + genre */}
+        <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-black/80 to-transparent z-10" />
+        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between z-20">
           <div className="flex items-center gap-1">
             <Star size={9} className="fill-amber-400 text-amber-400" />
             <span className="text-amber-400 text-[9px] font-bold">{book.rating}</span>
@@ -255,11 +272,33 @@ function EmptyState() {
 /* ─── MAIN ───────────────────────────────────────────────────────────── */
 export default function MyFavourites() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [books, setBooks] = useState(ALL_INITIAL);
-  const [sort, setSort]         = useState("date_desc");
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("date_desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [removed, setRemoved]   = useState(null);
+  const [removed, setRemoved] = useState(null);
+  const [undoTimer, setUndoTimer] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
+
+  // Load favourites from backend on mount
+  useEffect(() => {
+    let active = true;
+    async function loadFavourites() {
+      try {
+        setLoading(true);
+        const res = await bookService.getFavourites();
+        if (!active) return;
+        const mapped = (res.favourites || []).map((f, i) => mapFavouriteToUI(f, i));
+        setBooks(mapped);
+      } catch (err) {
+        console.error("Failed to load favourites:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadFavourites();
+    return () => { active = false; };
+  }, []);
 
   const sorted = useMemo(() => {
     const list = [...books];
@@ -278,90 +317,107 @@ export default function MyFavourites() {
 
   const handleSort = (val) => { setSort(val); setCurrentPage(1); };
 
-  const handleUnfavourite = (id) => {
-    const book = books.find((b) => b.id === id);
-    setBooks((prev) => prev.filter((b) => b.id !== id));
+  const handleUnfavourite = async (googleBookId) => {
+    const book = books.find((b) => b.id === googleBookId);
+    // Optimistically remove from UI
+    setBooks((prev) => prev.filter((b) => b.id !== googleBookId));
     setRemoved(book);
-    // If removing causes current page to exceed new totalPages, go back
     const newTotal = Math.max(1, Math.ceil((books.length - 1) / PER_PAGE));
     if (currentPage > newTotal) setCurrentPage(newTotal);
-    setTimeout(() => setRemoved(null), 4000);
+
+    // Call API
+    try {
+      await bookService.removeFavourite(googleBookId);
+    } catch (err) {
+      console.error("Failed to remove favourite:", err);
+      // Revert on error
+      setBooks((prev) => [...prev, book]);
+      setRemoved(null);
+      return;
+    }
+
+    // Auto-dismiss undo toast after 4s
+    if (undoTimer) clearTimeout(undoTimer);
+    const timer = setTimeout(() => setRemoved(null), 4000);
+    setUndoTimer(timer);
   };
 
-  const handleUndo = () => {
-    if (removed) {
-      setBooks((prev) => [...prev, removed]);
-      setRemoved(null);
+  const handleUndo = async () => {
+    if (!removed) return;
+    const book = removed;
+    setRemoved(null);
+    if (undoTimer) clearTimeout(undoTimer);
+    try {
+      await bookService.addFavourite(book.id, book.title, book.author, book.thumbnail);
+      setBooks((prev) => [book, ...prev]);
+    } catch (err) {
+      console.error("Undo failed:", err);
     }
   };
 
   return (
     <div className="flex min-h-screen bg-[#06040d] font-sans text-gray-100 overflow-x-hidden">
-      {/* Responsive Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Nav */}
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* Scrollable body */}
         <main className="flex-1 overflow-y-auto no-scrollbar px-8 py-8">
           <div className="max-w-5xl mx-auto">
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-extrabold flex items-center gap-2">
-            My Favourites
-            <PiHeartFill className="text-rose-500 text-xl" />
-          </h1>
-          <SortDropdown value={sort} onChange={handleSort} />
-        </div>
-        <p className="text-gray-500 text-sm mb-7">
-          {books.length} {books.length === 1 ? "book" : "books"} saved
-        </p>
-
-        {/* Grid or empty */}
-        {sorted.length > 0 ? (
-          <>
-            <div className="grid grid-cols-6 gap-4">
-              {pageBooks.map((book) => (
-                <FavouriteCard
-                  key={book.id}
-                  book={book}
-                  onUnfavourite={handleUnfavourite}
-                  onOpen={setSelectedBook}
-                />
-              ))}
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-2xl font-extrabold flex items-center gap-2">
+                My Favourites
+                <PiHeartFill className="text-rose-500 text-xl" />
+              </h1>
+              <SortDropdown value={sort} onChange={handleSort} />
             </div>
-
-            {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPage={setCurrentPage}
-            />
-
-            {/* Page info */}
-            <p className="text-center text-gray-600 text-xs mt-4">
-              Page {currentPage} of {totalPages} · Showing{" "}
-              {(currentPage - 1) * PER_PAGE + 1}–{Math.min(currentPage * PER_PAGE, sorted.length)} of {sorted.length} books
+            <p className="text-gray-500 text-sm mb-7">
+              {loading ? "Loading…" : `${books.length} ${books.length === 1 ? "book" : "books"} saved`}
             </p>
-          </>
-        ) : (
-          <EmptyState />
-        )}
-      </div>
 
+            {/* Grid, skeleton, or empty */}
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {Array(12).fill(null).map((_, i) => <FavouriteCardSkeleton key={i} />)}
+              </div>
+            ) : sorted.length > 0 ? (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {pageBooks.map((book) => (
+                    <FavouriteCard
+                      key={book.id}
+                      book={book}
+                      onUnfavourite={handleUnfavourite}
+                      onOpen={setSelectedBook}
+                    />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <>
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPage={setCurrentPage} />
+                    <p className="text-center text-gray-600 text-xs mt-4">
+                      Page {currentPage} of {totalPages} · Showing{" "}
+                      {(currentPage - 1) * PER_PAGE + 1}–{Math.min(currentPage * PER_PAGE, sorted.length)} of {sorted.length} books
+                    </p>
+                  </>
+                )}
+              </>
+            ) : (
+              <EmptyState />
+            )}
+          </div>
         </main>
       </div>
 
       {/* Undo toast */}
       {removed && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#1e1b2e] border border-white/10 rounded-2xl px-5 py-3 shadow-2xl shadow-black/60 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#1e1b2e] border border-white/10 rounded-2xl px-5 py-3 shadow-2xl shadow-black/60">
           <Heart size={14} className="text-rose-400" />
           <p className="text-sm text-gray-300">
-            <span className="text-white font-semibold">{removed.title}</span> removed from favourites
+            <span className="text-white font-semibold">{removed.title}</span> removed
           </p>
           <button
             onClick={handleUndo}
@@ -371,7 +427,7 @@ export default function MyFavourites() {
           </button>
         </div>
       )}
-      {/* Modal */}
+
       {selectedBook && (
         <BookModal book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}

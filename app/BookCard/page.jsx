@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Bell,
@@ -16,40 +17,42 @@ import {
 import Sidebar from "../../components/sidebar";
 import Navbar from "../../components/navbar";
 import BookModal from "../searchresults/bookmodal";
+import { bookService } from "@/app/services/bookService";
 
 /* ─── DATA ──────────────────────────────────────────────────────────── */
-const recentlyAdded = [
-  { title: "A Curse So Dark and Lonely", author: "Brigid Kemmerer", rating: 4.6, badge: "New", bg: "from-purple-900 to-indigo-950", color: "#c084fc" },
-  { title: "The Atlas Six", author: "Olivie Blake", rating: 4.5, badge: "New", bg: "from-slate-800 to-zinc-900", color: "#94a3b8" },
-  { title: "The Seven Husbands of Evelyn Hugo", author: "Taylor Jenkins Reid", rating: 4.7, badge: "New", bg: "from-amber-900 to-orange-950", color: "#fbbf24" },
-  { title: "Iron Flame", author: "Rebecca Yarros", rating: 4.8, badge: "New", bg: "from-orange-900 to-red-950", color: "#f97316" },
-  { title: "The Teacher", author: "Freida McFadden", rating: 4.6, badge: "New", bg: "from-sky-900 to-blue-950", color: "#38bdf8" },
-  { title: "Fourth Wing", author: "Rebecca Yarros", rating: 4.7, bg: "from-yellow-900 to-amber-950", color: "#eab308" },
-  { title: "The Night Circus", author: "Erin Morgenstern", rating: 4.5, bg: "from-gray-800 to-zinc-950", color: "#e5e7eb" },
-  { title: "The House in the Cerulean Sea", author: "TJ Klune", rating: 4.7, bg: "from-teal-900 to-cyan-950", color: "#2dd4bf" },
+// Mock data removed in favor of dynamic API fetching
+
+/* ─── API → UI NORMALIZER ────────────────────────────────────────────── */
+const DASHBOARD_GRADIENTS = [
+  { bg: "from-red-900 via-red-800 to-yellow-900",       color: "#fcd34d" },
+  { bg: "from-emerald-900 via-green-800 to-teal-900",   color: "#6ee7b7" },
+  { bg: "from-sky-900 via-blue-800 to-indigo-900",      color: "#93c5fd" },
+  { bg: "from-violet-900 via-purple-800 to-fuchsia-900",color: "#d8b4fe" },
+  { bg: "from-slate-900 via-gray-800 to-zinc-900",      color: "#cbd5e1" },
+  { bg: "from-amber-900 via-orange-800 to-red-900",     color: "#fbbf24" },
+  { bg: "from-indigo-900 via-violet-800 to-purple-900", color: "#a5b4fc" },
 ];
 
-const trending = [
-  { rank: 1, title: "Heir of Fire", author: "Sarah J. Maas", rating: 4.8, bg: "from-emerald-900 to-green-950", color: "#4ade80" },
-  { rank: 2, title: "It Ends With Us", author: "Colleen Hoover", rating: 4.7, bg: "from-pink-900 to-rose-950", color: "#f472b6" },
-  { rank: 3, title: "Verity", author: "Colleen Hoover", rating: 4.6, bg: "from-lime-900 to-green-950", color: "#a3e635" },
-  { rank: 4, title: "The Midnight Library", author: "Matt Haig", rating: 4.6, bg: "from-violet-900 to-purple-950", color: "#a78bfa" },
-  { rank: 5, title: "The Cruel Prince", author: "Holly Black", rating: 4.6, bg: "from-amber-900 to-yellow-950", color: "#fbbf24" },
-  { rank: 6, title: "Project Hail Mary", author: "Andy Weir", rating: 4.8, bg: "from-cyan-900 to-sky-950", color: "#22d3ee" },
-  { rank: 7, title: "The Maid", author: "Nita Prose", rating: 4.4, bg: "from-red-900 to-rose-950", color: "#f87171" },
-  { rank: 8, title: "Shadow and Bone", author: "Leigh Bardugo", rating: 4.5, bg: "from-indigo-900 to-violet-950", color: "#818cf8" },
-];
-
-const popularPicks = [
-  { title: "Dune", author: "Frank Herbert", rating: 4.6, bg: "from-orange-900 to-amber-950", color: "#f97316" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien", rating: 4.8, bg: "from-green-900 to-emerald-950", color: "#4ade80" },
-  { title: "1984", author: "George Orwell", rating: 4.7, bg: "from-zinc-800 to-neutral-950", color: "#a1a1aa" },
-  { title: "Pride and Prejudice", author: "Jane Austen", rating: 4.6, bg: "from-rose-900 to-pink-950", color: "#fda4af" },
-  { title: "The Alchemist", author: "Paulo Coelho", rating: 4.5, bg: "from-yellow-800 to-orange-950", color: "#fde68a" },
-  { title: "The Book Thief", author: "Markus Zusak", rating: 4.6, bg: "from-blue-900 to-indigo-950", color: "#60a5fa" },
-  { title: "Sapiens", author: "Yuval Noah Harari", rating: 4.6, bg: "from-stone-800 to-slate-950", color: "#d6d3d1" },
-  { title: "The Psychology of Money", author: "Morgan Housel", rating: 4.7, bg: "from-teal-900 to-cyan-950", color: "#2dd4bf" },
-];
+function mapDashboardBook(apiBook, index) {
+  const style = DASHBOARD_GRADIENTS[index % DASHBOARD_GRADIENTS.length];
+  return {
+    id:           apiBook.id,
+    title:        apiBook.title,
+    author:       Array.isArray(apiBook.authors)
+                    ? apiBook.authors.join(", ")
+                    : (apiBook.author || "Unknown Author"),
+    rating:       apiBook.averageRating || 4.5,
+    pages:        apiBook.pageCount     || 320,
+    desc:         apiBook.description   || "No description available.",
+    year:         apiBook.publishedDate ? apiBook.publishedDate.split("-")[0] : "2024",
+    genre:        apiBook.categories?.length ? apiBook.categories[0] : "Fiction",
+    thumbnail:    apiBook.thumbnail     || null,
+    bg:           style.bg,
+    color:        style.color,
+    isReadable:   apiBook.isReadable    ?? false,
+    webReaderLink:apiBook.webReaderLink ?? null,
+  };
+}
 
 /* ─── COVER ILLUSTRATOR (PREMIUM CSS BOOK ART) ───────────────────────── */
 function BookCoverIllustration({ book }) {
@@ -523,7 +526,51 @@ function BookCoverIllustration({ book }) {
   }
 }
 
+/* ─── FORMATTERS & UTILS ────────────────────────────────────────────── */
+const mapApiBookToUI = (apiBook, index) => {
+  const gradients = [
+    { bg: "from-purple-900 to-indigo-950", color: "#c084fc" },
+    { bg: "from-slate-800 to-zinc-900", color: "#94a3b8" },
+    { bg: "from-amber-900 to-orange-950", color: "#fbbf24" },
+    { bg: "from-orange-900 to-red-950", color: "#f97316" },
+    { bg: "from-sky-900 to-blue-950", color: "#38bdf8" },
+    { bg: "from-yellow-900 to-amber-950", color: "#eab308" },
+    { bg: "from-teal-900 to-cyan-950", color: "#2dd4bf" },
+    { bg: "from-pink-900 to-rose-950", color: "#f472b6" },
+  ];
+  const style = gradients[index % gradients.length];
+
+  return {
+    id: apiBook.id,
+    title: apiBook.title,
+    author: apiBook.authors ? apiBook.authors.join(", ") : "Unknown Author",
+    rating: apiBook.averageRating || 4.5,
+    pages: apiBook.pageCount || 320,
+    desc: apiBook.description || "No description available for this book.",
+    year: apiBook.publishedDate ? apiBook.publishedDate.split("-")[0] : "2024",
+    genre: apiBook.categories && apiBook.categories.length > 0 ? apiBook.categories[0] : "Fiction",
+    thumbnail: apiBook.thumbnail,
+    bg: apiBook.bg || style.bg,
+    color: apiBook.color || style.color,
+    isReadable: apiBook.isReadable ?? false,
+    webReaderLink: apiBook.webReaderLink ?? null,
+  };
+};
+
 /* ─── SUB-COMPONENTS ─────────────────────────────────────────────────── */
+
+function BookCardSkeleton() {
+  return (
+    <div className="flex flex-col shrink-0 w-[140px] animate-pulse">
+      <div className="w-full h-[200px] rounded-2xl bg-white/5 border border-white/5 shadow-lg shadow-black/30" />
+      <div className="mt-3 px-1 space-y-2">
+        <div className="h-3 bg-white/10 rounded w-5/6" />
+        <div className="h-2 bg-white/5 rounded w-1/2" />
+        <div className="h-2.5 bg-white/10 rounded w-1/3" />
+      </div>
+    </div>
+  );
+}
 
 function BookCard({ book, showRank = false, onOpen }) {
   const [liked, setLiked] = useState(false);
@@ -538,8 +585,17 @@ function BookCard({ book, showRank = false, onOpen }) {
         {/* Realistic book spine lighting effect */}
         <div className="absolute left-0 inset-y-0 w-2.5 bg-gradient-to-r from-black/40 via-white/10 to-transparent z-20" />
 
-        {/* Custom CSS Illustration Cover */}
-        <BookCoverIllustration book={book} />
+        {/* Custom CSS Illustration Cover or Image Cover */}
+        {book.thumbnail ? (
+          <img
+            src={book.thumbnail}
+            alt={book.title}
+            className="absolute inset-0 w-full h-full object-cover z-10"
+            loading="lazy"
+          />
+        ) : (
+          <BookCoverIllustration book={book} />
+        )}
 
         {/* Rank badge */}
         {showRank && (
@@ -558,7 +614,7 @@ function BookCard({ book, showRank = false, onOpen }) {
         {/* Heart icon overlay */}
         <button
           onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
-          className="absolute top-2.5 right-2.5 z-30 w-6 h-6 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-black/60 active:scale-90 transition-all border border-white/5"
+          className="absolute top-2.5 right-2.5 z-30 w-6 h-6 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-black/60 active:scale-95 transition-all border border-white/5"
         >
           <Heart
             size={11}
@@ -583,16 +639,22 @@ function BookCard({ book, showRank = false, onOpen }) {
   );
 }
 
-function SectionHeader({ title, icon }) {
+function SectionHeader({ title, icon, href }) {
+  const router = useRouter();
   return (
     <div className="flex items-center justify-between mb-4">
       <h2 className="text-white font-extrabold text-base flex items-center gap-2 tracking-tight">
         {title} {icon}
       </h2>
       <div className="flex items-center gap-4">
-        <button className="text-[#582fff] hover:text-[#7651ff] text-xs font-bold transition-all">
-          View all
-        </button>
+        {href && (
+          <button 
+            onClick={() => router.push(href)}
+            className="text-[#582fff] hover:text-[#7651ff] text-xs font-bold transition-all"
+          >
+            View all
+          </button>
+        )}
         <div className="flex items-center gap-1.5">
           <button className="w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all">
             <ChevronLeft size={16} />
@@ -608,8 +670,48 @@ function SectionHeader({ title, icon }) {
 
 /* ─── MAIN PAGE ──────────────────────────────────────────────────────── */
 export default function ReadifyPage() {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [recentlyAdded, setRecentlyAdded] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [popularPicks, setPopularPicks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    async function fetchBooks() {
+      try {
+        setLoading(true);
+        // Fetch featured categories and free readable books
+        const [featuredData, freeData] = await Promise.all([
+          bookService.getFeatured(),
+          bookService.getFree("bestsellers", 8),
+        ]);
+
+        if (!active) return;
+
+        // Map responses to UI expected shape
+        // Backend returns: { fiction, mystery, science, fantasy, biography }
+        const freeBooks     = (freeData?.books          || []).map((b, i) => mapDashboardBook(b, i));
+        const trendingBooks = (featuredData?.fantasy     || featuredData?.fiction   || []).map((b, i) => mapDashboardBook(b, i)).slice(0, 8);
+        const popularBooks  = (featuredData?.mystery     || featuredData?.biography || []).map((b, i) => mapDashboardBook(b, i)).slice(0, 8);
+
+        setRecentlyAdded(freeBooks.length > 0 ? freeBooks : (featuredData?.science || []).map((b, i) => mapDashboardBook(b, i)).slice(0, 8));
+        setTrending(trendingBooks);
+        setPopularPicks(popularBooks);
+      } catch (err) {
+        console.error("Failed to load dashboard books:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    fetchBooks();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[#06040d] font-sans text-gray-100 overflow-x-hidden">
@@ -639,11 +741,17 @@ export default function ReadifyPage() {
                 Explore books that inspire, entertain, and stay with you forever.
               </p>
               <div className="flex items-center gap-4">
-                <button className="flex items-center gap-2 bg-gradient-to-r from-purple-700 via-violet-600 to-fuchsia-600 hover:from-purple-600 hover:via-violet-500 hover:to-fuchsia-500 text-white text-sm px-6 py-2.5 rounded-sm font-semibold transition-all shadow-lg shadow-purple-700/40 hover:shadow-purple-500/50">
+                <button 
+                  onClick={() => router.push("/searchresults")}
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-700 via-violet-600 to-fuchsia-600 hover:from-purple-600 hover:via-violet-500 hover:to-fuchsia-500 text-white text-sm px-6 py-2.5 rounded-sm font-semibold transition-all shadow-lg shadow-purple-700/40 hover:shadow-purple-500/50"
+                >
                   Explore Now
                   <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                 </button>
-                <button className="flex items-center gap-2 bg-white/[0.08] hover:bg-white/[0.14] border border-white/20 text-white text-sm px-6 py-2.5 rounded-sm font-medium transition-all">
+                <button 
+                  onClick={() => router.push("/favourite")}
+                  className="flex items-center gap-2 bg-white/[0.08] hover:bg-white/[0.14] border border-white/20 text-white text-sm px-6 py-2.5 rounded-sm font-medium transition-all"
+                >
                   My Library
                 </button>
               </div>
@@ -670,11 +778,13 @@ export default function ReadifyPage() {
 
           {/* Recently Added */}
           <section>
-            <SectionHeader title="Recently Added" />
+            <SectionHeader title="Recently Added" href="/searchresults?q=new" />
             <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/5 hover:scrollbar-thumb-white/10 scrollbar-track-transparent">
-              {recentlyAdded.map((book) => (
-                <BookCard key={book.title} book={book} onOpen={setSelectedBook} />
-              ))}
+              {loading
+                ? Array(8).fill(null).map((_, i) => <BookCardSkeleton key={i} />)
+                : recentlyAdded.map((book) => (
+                    <BookCard key={book.id || book.title} book={book} onOpen={setSelectedBook} />
+                  ))}
             </div>
           </section>
 
@@ -683,11 +793,19 @@ export default function ReadifyPage() {
             <SectionHeader
               title="Trending Now"
               icon={<Flame className="text-[#ff5c2f] text-base shrink-0" size={18} />}
+              href="/searchresults?q=trending"
             />
             <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/5 hover:scrollbar-thumb-white/10 scrollbar-track-transparent">
-              {trending.map((book) => (
-                <BookCard key={book.title} book={book} showRank onOpen={setSelectedBook} />
-              ))}
+              {loading
+                ? Array(8).fill(null).map((_, i) => <BookCardSkeleton key={i} />)
+                : trending.map((book, idx) => (
+                    <BookCard
+                      key={book.id || book.title}
+                      book={{ ...book, rank: idx + 1 }}
+                      showRank
+                      onOpen={setSelectedBook}
+                    />
+                  ))}
             </div>
           </section>
 
@@ -696,11 +814,14 @@ export default function ReadifyPage() {
             <SectionHeader
               title="Popular Picks"
               icon={<Crown className="text-amber-400 text-base shrink-0" size={18} />}
+              href="/searchresults?q=popular"
             />
             <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/5 hover:scrollbar-thumb-white/10 scrollbar-track-transparent">
-              {popularPicks.map((book) => (
-                <BookCard key={book.title} book={book} onOpen={setSelectedBook} />
-              ))}
+              {loading
+                ? Array(8).fill(null).map((_, i) => <BookCardSkeleton key={i} />)
+                : popularPicks.map((book) => (
+                    <BookCard key={book.id || book.title} book={book} onOpen={setSelectedBook} />
+                  ))}
             </div>
           </section>
 

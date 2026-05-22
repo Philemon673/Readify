@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 import {
   BookOpen,
   User,
@@ -16,6 +17,7 @@ import { FaGoogle, FaApple } from "react-icons/fa";
 
 export default function ReadifySignup() {
   const router = useRouter();
+  const { register } = useAuth();
 
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [showPass, setShowPass] = useState(false);
@@ -25,7 +27,7 @@ export default function ReadifySignup() {
 
   const handleChange = (e) => setForm((prev) => ({ ...prev, [e.target.id]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!form.name || !form.email || !form.password || !form.confirm) {
@@ -37,11 +39,21 @@ export default function ReadifySignup() {
       return;
     }
     setLoading(true);
-    // Simulate signup, redirecting to BookCard dashboard
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await register(form.name, form.email, form.password, form.confirm);
       router.push("/BookCard");
-    }, 1200);
+    } catch (err) {
+      const errMsg = err.response?.data?.message;
+      if (Array.isArray(errMsg)) {
+        setError(errMsg[0]);
+      } else if (typeof errMsg === "string") {
+        setError(errMsg);
+      } else {
+        setError("Failed to create account. Please check your credentials.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

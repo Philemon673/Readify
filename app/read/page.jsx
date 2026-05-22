@@ -129,6 +129,8 @@ export default function EReaderPage() {
   const contentRef = useRef(null);
 
   const [activeBook, setActiveBook] = useState(BOOK);
+  const [viewerLoading, setViewerLoading] = useState(true);
+  const [viewerFailed, setViewerFailed] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -142,6 +144,45 @@ export default function EReaderPage() {
       }
     }
   }, []);
+
+  // Load Google Books Embedded Viewer
+  useEffect(() => {
+    if (!activeBook.id) {
+      setViewerFailed(true);
+      setViewerLoading(false);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://www.google.com/books/jsapi.js";
+    script.async = true;
+    script.onload = () => {
+      if (!window.google || !window.google.books) return;
+      window.google.books.load();
+      window.google.books.setOnLoadCallback(() => {
+        const canvas = document.getElementById("viewerCanvas");
+        if (!canvas) return;
+        const viewer = new window.google.books.DefaultViewer(canvas);
+        viewer.load(
+          activeBook.id,
+          () => {
+            // Success
+            setViewerLoading(false);
+          },
+          () => {
+            // Failure (Book not embeddable)
+            setViewerFailed(true);
+            setViewerLoading(false);
+          }
+        );
+      });
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [activeBook.id]);
 
   const content = getContent(currentChapter);
   const progress = progressPercent(currentChapter);
@@ -337,12 +378,18 @@ export default function EReaderPage() {
           <div className={`p-4 border-b ${t.sidebarBorder}`}>
             <div className="flex items-center gap-3">
               {/* Cover */}
-              <div className="w-16 h-20 rounded-lg bg-[#1a0a3e] flex flex-col items-center justify-center shrink-0 shadow-md p-1">
-                <span className="text-2xl">{activeBook.cover || "🌙"}</span>
-                <span className="text-[7px] text-purple-300 font-bold mt-0.5 text-center leading-tight uppercase line-clamp-2">
-                  {activeBook.title}
-                </span>
-              </div>
+              {activeBook.thumbnail ? (
+                <div className="w-16 h-20 rounded-lg shrink-0 shadow-md overflow-hidden border border-black/10 dark:border-white/10">
+                  <img src={activeBook.thumbnail} alt={activeBook.title} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-16 h-20 rounded-lg bg-[#1a0a3e] flex flex-col items-center justify-center shrink-0 shadow-md p-1">
+                  <span className="text-2xl">{activeBook.cover || "🌙"}</span>
+                  <span className="text-[7px] text-purple-300 font-bold mt-0.5 text-center leading-tight uppercase line-clamp-2">
+                    {activeBook.title}
+                  </span>
+                </div>
+              )}
               <div>
                 <p className={`font-semibold text-sm leading-tight ${t.sidebarText}`}>
                   {activeBook.title}
@@ -469,50 +516,63 @@ export default function EReaderPage() {
             }}
           >
             {/* Page content */}
-            <div
-              className={`max-w-xl mx-auto px-8 pt-14 pb-8 ${t.pageText}`}
-              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
-            >
-              {/* Chapter header */}
-              <p
-                className="text-center text-xs font-bold tracking-[0.2em] uppercase mb-3"
-                style={{ color: "#6c5ce7" }}
+            {/* Page content */}
+            {viewerFailed || !activeBook.id ? (
+              <div
+                className={`max-w-xl mx-auto px-8 pt-14 pb-8 ${t.pageText}`}
+                style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
               >
-                {content.subtitle}
-              </p>
-              <h1
-                className="text-center mb-8"
-                style={{ fontSize: "2rem", fontWeight: 400, letterSpacing: "-0.01em" }}
-              >
-                {content.title}
-              </h1>
+                {/* Chapter header */}
+                <p
+                  className="text-center text-xs font-bold tracking-[0.2em] uppercase mb-3"
+                  style={{ color: "#6c5ce7" }}
+                >
+                  {content.subtitle}
+                </p>
+                <h1
+                  className="text-center mb-8"
+                  style={{ fontSize: "2rem", fontWeight: 400, letterSpacing: "-0.01em" }}
+                >
+                  {content.title}
+                </h1>
 
-              {/* Decorative divider */}
-              <div className="flex items-center justify-center gap-2 mb-8 opacity-40">
-                <Circle size={4} fill="currentColor" />
-                <span className="text-lg">✦</span>
-                <Circle size={4} fill="currentColor" />
+                {/* Decorative divider */}
+                <div className="flex items-center justify-center gap-2 mb-8 opacity-40">
+                  <Circle size={4} fill="currentColor" />
+                  <span className="text-lg">✦</span>
+                  <Circle size={4} fill="currentColor" />
+                </div>
+
+                {/* Body paragraphs */}
+                <div className="space-y-5">
+                  {content.paragraphs.map((para, i) => (
+                    <p
+                      key={i}
+                      className="leading-relaxed"
+                      style={{
+                        fontSize: `${fontSize}px`,
+                        textIndent: i === 0 ? "0" : "1.5rem",
+                      }}
+                    >
+                      {para}
+                    </p>
+                  ))}
+                </div>
+
+                {/* Padding at bottom */}
+                <div className="h-16" />
               </div>
-
-              {/* Body paragraphs */}
-              <div className="space-y-5">
-                {content.paragraphs.map((para, i) => (
-                  <p
-                    key={i}
-                    className="leading-relaxed"
-                    style={{
-                      fontSize: `${fontSize}px`,
-                      textIndent: i === 0 ? "0" : "1.5rem",
-                    }}
-                  >
-                    {para}
-                  </p>
-                ))}
+            ) : (
+              <div className="w-full h-full relative" style={{ minHeight: "80vh" }}>
+                {viewerLoading && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                    <div className="w-6 h-6 border-2 border-[#6c5ce7] border-t-transparent rounded-full animate-spin" />
+                    <p className={`text-sm font-medium ${t.pageText}`}>Loading E-Reader...</p>
+                  </div>
+                )}
+                <div id="viewerCanvas" className="w-full h-full" />
               </div>
-
-              {/* Padding at bottom */}
-              <div className="h-16" />
-            </div>
+            )}
           </div>
 
           {/* ── Bottom bar ─────────────────────────────────────────────────── */}

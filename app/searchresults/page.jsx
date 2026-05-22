@@ -10,40 +10,37 @@ import {
 import Sidebar from "../../components/sidebar";
 import Navbar from "../../components/navbar";
 import { MdOutlineAutoStories } from "react-icons/md";
-import { PiBookmarkSimpleFill } from "react-icons/pi";
-import { GiBookshelf } from "react-icons/gi";
+import { bookService } from "@/app/services/bookService";
 
-/* ─── DATA ───────────────────────────────────────────────────────────── */
-const ALL_BOOKS = [
-  { id: 1,  title: "Harry Potter and the Sorcerer's Stone",     author: "J.K. Rowling", rating: 4.8, bg: "from-red-900 via-red-800 to-yellow-900",       color: "#fcd34d", year: 1997, genre: "Fantasy", pages: 309,  desc: "The story of Harry Potter, an orphan who discovers on his 11th birthday that he is a wizard and has been accepted to Hogwarts School of Witchcraft and Wizardry." },
-  { id: 2,  title: "Harry Potter and the Chamber of Secrets",   author: "J.K. Rowling", rating: 4.7, bg: "from-emerald-900 via-green-800 to-teal-900",    color: "#6ee7b7", year: 1998, genre: "Fantasy", pages: 341,  desc: "Harry Potter's second year at Hogwarts is marked by a series of mysterious attacks on students. Someone has opened the Chamber of Secrets, unleashing a deadly monster." },
-  { id: 3,  title: "Harry Potter and the Prisoner of Azkaban",  author: "J.K. Rowling", rating: 4.8, bg: "from-sky-900 via-blue-800 to-indigo-900",       color: "#93c5fd", year: 1999, genre: "Fantasy", pages: 435,  desc: "In his third year at Hogwarts, Harry learns that a convicted murderer and his father's best friend, Sirius Black, has escaped from Azkaban prison." },
-  { id: 4,  title: "Harry Potter and the Goblet of Fire",       author: "J.K. Rowling", rating: 4.7, bg: "from-violet-900 via-purple-800 to-fuchsia-900",  color: "#d8b4fe", year: 2000, genre: "Fantasy", pages: 734,  desc: "Harry Potter's name is mysteriously entered into the Triwizard Tournament, a dangerous magical competition between three wizarding schools." },
-  { id: 5,  title: "Harry Potter and the Order of the Phoenix", author: "J.K. Rowling", rating: 4.6, bg: "from-slate-900 via-gray-800 to-zinc-900",       color: "#cbd5e1", year: 2003, genre: "Fantasy", pages: 870,  desc: "Lord Voldemort is back and now Harry must rely on his friends and the secret Order of the Phoenix to fight the rise of dark forces." },
-  { id: 6,  title: "Harry Potter and the Half-Blood Prince",    author: "J.K. Rowling", rating: 4.7, bg: "from-amber-900 via-orange-800 to-red-900",      color: "#fbbf24", year: 2005, genre: "Fantasy", pages: 652,  desc: "Dumbledore mentors Harry in Voldemort's past while war rages outside Hogwarts. Secrets about the Half-Blood Prince are slowly uncovered." },
-  { id: 7,  title: "Harry Potter and the Deathly Hallows",      author: "J.K. Rowling", rating: 4.9, bg: "from-indigo-900 via-violet-800 to-purple-900",   color: "#a5b4fc", year: 2007, genre: "Fantasy", pages: 759,  desc: "The epic conclusion to the Harry Potter series. Harry, Ron and Hermione must destroy all of Voldemort's Horcruxes to defeat him once and for all." },
-  { id: 8,  title: "Harry Potter and the Cursed Child",         author: "J.K. Rowling & J. Tiffany", rating: 4.6, bg: "from-zinc-900 via-neutral-800 to-stone-900", color: "#e7e5e4", year: 2016, genre: "Fantasy", pages: 336, desc: "The eighth story. Nineteen years later. Harry and his son Albus must grapple with a revisited past while time itself is threatened." },
-  { id: 9,  title: "Fantastic Beasts and Where to Find Them",  author: "J.K. Rowling", rating: 4.4, bg: "from-lime-900 via-green-800 to-emerald-900",     color: "#bef264", year: 2001, genre: "Fantasy", pages: 128,  desc: "An A–Z of magical creatures from Newt Scamander's famous compendium, now available to the general wizarding public." },
-  { id: 10, title: "Quidditch Through the Ages",                author: "J.K. Rowling", rating: 4.3, bg: "from-cyan-900 via-sky-800 to-blue-900",         color: "#67e8f9", year: 2001, genre: "Sports/Fantasy", pages: 112, desc: "The history of Quidditch, from its earliest days in the eleventh century to modern tournaments. Essential reading for any Quidditch fan." },
-  { id: 11, title: "The Tales of Beedle the Bard",              author: "J.K. Rowling", rating: 4.2, bg: "from-rose-900 via-pink-800 to-fuchsia-900",     color: "#fda4af", year: 2008, genre: "Fantasy", pages: 128,  desc: "A collection of five classic wizarding fairy tales including The Tale of the Three Brothers, as referenced in The Deathly Hallows." },
-  { id: 12, title: "Hogwarts: An Incomplete and Unreliable Guide", author: "J.K. Rowling", rating: 4.1, bg: "from-teal-900 via-cyan-800 to-sky-900",    color: "#5eead4", year: 2016, genre: "Fantasy", pages: 90,   desc: "Pottermore Presents stories about Hogwarts itself — its history, its secrets, and the mysterious magic that enchants the famous castle." },
-  { id: 13, title: "Short Stories from Hogwarts of Power",       author: "J.K. Rowling", rating: 4.0, bg: "from-purple-900 via-violet-800 to-indigo-900",  color: "#c4b5fd", year: 2016, genre: "Fantasy", pages: 78,   desc: "Pottermore Presents three short volumes exploring some of the most powerful and notorious characters from the Harry Potter stories." },
-  { id: 14, title: "Harry Potter: A Pop-Up Book",               author: "Various",       rating: 4.3, bg: "from-orange-900 via-amber-800 to-yellow-900",   color: "#fdba74", year: 2010, genre: "Art Book", pages: 60,   desc: "An extraordinary pop-up paper engineering experience celebrating the iconic world of Harry Potter with stunning 3-D paper artistry." },
-  { id: 15, title: "The HP Wizarding Almanac",                   author: "J.K. Rowling", rating: 4.5, bg: "from-blue-900 via-indigo-800 to-violet-900",    color: "#93c5fd", year: 2023, genre: "Fantasy", pages: 272,  desc: "A beautifully illustrated visual guide through the wizarding world, packed with stunning artwork and detailed magical information." },
-  { id: 16, title: "Harry Potter: MinaLima Edition",             author: "J.K. Rowling", rating: 4.9, bg: "from-yellow-900 via-amber-800 to-orange-900",   color: "#fde68a", year: 2020, genre: "Fantasy", pages: 352,  desc: "A gorgeous illustrated edition of the Sorcerer's Stone, with over 150 full-color decorations by design studio MinaLima." },
-  ...Array.from({ length: 104 }, (_, i) => ({
-    id: 17 + i,
-    title: `Harry Potter – Collector's Vol. ${i + 1}`,
-    author: "J.K. Rowling",
-    rating: parseFloat((3.8 + Math.random() * 1.1).toFixed(1)),
-    bg: ["from-red-900 via-rose-800 to-pink-900","from-blue-900 via-indigo-800 to-violet-900","from-green-900 via-teal-800 to-cyan-900","from-amber-900 via-orange-800 to-red-900","from-violet-900 via-purple-800 to-fuchsia-900","from-slate-900 via-gray-800 to-zinc-900"][i % 6],
-    color: ["#fca5a5","#93c5fd","#6ee7b7","#fbbf24","#d8b4fe","#cbd5e1"][i % 6],
-    year: 1997 + (i % 27),
-    genre: "Fantasy",
-    pages: 200 + (i * 7) % 600,
-    desc: `A special collector's edition volume celebrating the magic of Harry Potter's wizarding world, featuring exclusive artwork and bonus content.`,
-  })),
-];
+/* ─── FORMATTERS & UTILS ────────────────────────────────────────────── */
+const mapApiBookToUI = (apiBook, index) => {
+  const gradients = [
+    { bg: "from-red-900 via-red-800 to-yellow-900", color: "#fcd34d" },
+    { bg: "from-emerald-900 via-green-800 to-teal-900", color: "#6ee7b7" },
+    { bg: "from-sky-900 via-blue-800 to-indigo-900", color: "#93c5fd" },
+    { bg: "from-violet-900 via-purple-800 to-fuchsia-900", color: "#d8b4fe" },
+    { bg: "from-slate-900 via-gray-800 to-zinc-900", color: "#cbd5e1" },
+    { bg: "from-amber-900 via-orange-800 to-red-900", color: "#fbbf24" },
+    { bg: "from-indigo-900 via-violet-800 to-purple-900", color: "#a5b4fc" },
+  ];
+  const style = gradients[index % gradients.length];
+
+  return {
+    id: apiBook.id,
+    title: apiBook.title,
+    author: apiBook.authors ? apiBook.authors.join(", ") : "Unknown Author",
+    rating: apiBook.averageRating || 4.5,
+    pages: apiBook.pageCount || 320,
+    desc: apiBook.description || "No description available for this book.",
+    year: apiBook.publishedDate ? apiBook.publishedDate.split("-")[0] : "2024",
+    genre: apiBook.categories && apiBook.categories.length > 0 ? apiBook.categories[0] : "Fiction",
+    thumbnail: apiBook.thumbnail,
+    bg: style.bg,
+    color: style.color,
+    isReadable: apiBook.isReadable ?? false,
+    webReaderLink: apiBook.webReaderLink ?? null,
+  };
+};
 
 const SORT_OPTIONS = [
   { label: "Relevance",         value: "relevance" },
@@ -63,37 +60,77 @@ import BookModal from "./bookmodal";
 function BookCard({ book, onOpen }) {
   const [liked, setLiked] = useState(false);
 
+  useEffect(() => {
+    let active = true;
+    async function checkFav() {
+      if (!book.id) return;
+      try {
+        const res = await bookService.checkFavourite(book.id);
+        if (active) setLiked(res.isFavourited);
+      } catch (err) {
+        console.error("Error checking favourite:", err);
+      }
+    }
+    checkFav();
+    return () => { active = false; };
+  }, [book.id]);
+
+  const handleLike = async (e) => {
+    e.stopPropagation();
+    try {
+      if (liked) {
+        await bookService.removeFavourite(book.id);
+        setLiked(false);
+      } else {
+        await bookService.addFavourite(book.id, book.title, book.author, book.thumbnail);
+        setLiked(true);
+      }
+    } catch (err) {
+      console.error("Failed to toggle favourite:", err);
+    }
+  };
+
   return (
-    <div className="group flex flex-col cursor-pointer" onClick={() => onOpen(book)}>
+    <div className="group flex flex-col cursor-pointer animate-fadeIn" onClick={() => onOpen(book)}>
       <div className={`relative w-full aspect-[2/3] rounded-xl bg-gradient-to-br ${book.bg} overflow-hidden shadow-lg shadow-black/40 border border-white/5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-violet-950/50`}>
         <button
-          onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
-          className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all hover:scale-110"
+          onClick={handleLike}
+          className="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all hover:scale-110"
         >
           <Heart size={13} className={liked ? "fill-rose-500 text-rose-500" : "text-white/80"} />
         </button>
 
-        <div className="absolute left-3 top-0 bottom-0 w-px bg-white/10" />
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-3 gap-1">
-          <MdOutlineAutoStories size={18} style={{ color: book.color, opacity: 0.7 }} />
-          <p
-            className="text-center text-[11px] font-extrabold leading-tight uppercase mt-1"
-            style={{ color: book.color, textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}
-          >
-            {book.title.replace("Harry Potter and the ", "").replace("Harry Potter: ", "").replace("Harry Potter – ", "").slice(0, 35)}
-          </p>
-        </div>
+        {book.thumbnail ? (
+          <img
+            src={book.thumbnail}
+            alt={book.title}
+            className="absolute inset-0 w-full h-full object-cover z-10"
+            loading="lazy"
+          />
+        ) : (
+          <>
+            <div className="absolute left-3 top-0 bottom-0 w-px bg-white/10 z-10" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-3 gap-1 z-10">
+              <MdOutlineAutoStories size={18} style={{ color: book.color, opacity: 0.7 }} />
+              <p
+                className="text-center text-[11px] font-extrabold leading-tight uppercase mt-1 text-center"
+                style={{ color: book.color, textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}
+              >
+                {book.title.slice(0, 35)}
+              </p>
+            </div>
+          </>
+        )}
 
         {/* Hover overlay — "View Details" prompt */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-          <span className="text-white text-[11px] font-semibold bg-violet-600/80 px-3 py-1 rounded-full backdrop-blur-sm">
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4 z-15">
+          <span className="text-white text-[11px] font-semibold bg-violet-600/80 px-3 py-1 rounded-full backdrop-blur-sm z-20">
             View Details
           </span>
         </div>
 
-        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-black/70 to-transparent" />
-        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
+        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-black/70 to-transparent z-10" />
+        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between z-20">
           <div className="flex items-center gap-1">
             <Star size={9} className="fill-amber-400 text-amber-400" />
             <span className="text-amber-400 text-[9px] font-bold">{book.rating}</span>
@@ -207,37 +244,54 @@ function SearchResultsInner() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sort, setSort] = useState("relevance");
   const [selectedBook, setSelectedBook] = useState(null);
+  
+  const [books, setBooks] = useState([]);
+  const [totalBooks, setTotalBooks] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   // Reset to page 1 whenever the query changes
   useEffect(() => { setCurrentPage(1); }, [query]);
 
-  const filtered = useMemo(() => {
-    if (!query.trim()) return ALL_BOOKS;
-    const q = query.toLowerCase();
-    return ALL_BOOKS.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        b.author.toLowerCase().includes(q) ||
-        b.genre.toLowerCase().includes(q)
-    );
-  }, [query]);
+  useEffect(() => {
+    let active = true;
+    async function loadResults() {
+      // Default to a broad subject query if there's no explicit search query
+      const searchQuery = query.trim() ? query : "subject:fiction";
+      
+      try {
+        setLoading(true);
+        const startIndex = (currentPage - 1) * PER_PAGE;
+        const res = await bookService.search(searchQuery, startIndex, PER_PAGE);
+        if (!active) return;
+        
+        const mapped = (res.books || []).map((b, i) => mapApiBookToUI(b, i));
+        setBooks(mapped);
+        setTotalBooks(res.totalItems || 0);
+      } catch (err) {
+        console.error("Search failed:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadResults();
+    return () => { active = false; };
+  }, [query, currentPage]);
 
   const sorted = useMemo(() => {
-    const books = [...filtered];
+    const list = [...books];
     switch (sort) {
-      case "rating_desc": return books.sort((a, b) => b.rating - a.rating);
-      case "rating_asc":  return books.sort((a, b) => a.rating - b.rating);
-      case "year_desc":   return books.sort((a, b) => b.year - a.year);
-      case "year_asc":    return books.sort((a, b) => a.year - b.year);
-      case "title_asc":   return books.sort((a, b) => a.title.localeCompare(b.title));
-      case "title_desc":  return books.sort((a, b) => b.title.localeCompare(a.title));
-      default:            return books;
+      case "rating_desc": return list.sort((a, b) => b.rating - a.rating);
+      case "rating_asc":  return list.sort((a, b) => a.rating - b.rating);
+      case "year_desc":   return list.sort((a, b) => b.year - a.year);
+      case "year_asc":    return list.sort((a, b) => a.year - b.year);
+      case "title_asc":   return list.sort((a, b) => a.title.localeCompare(b.title));
+      case "title_desc":  return list.sort((a, b) => b.title.localeCompare(a.title));
+      default:            return list;
     }
-  }, [filtered, sort]);
+  }, [books, sort]);
 
   const handleSort = (val) => { setSort(val); setCurrentPage(1); };
-  const totalPages = Math.ceil(sorted.length / PER_PAGE);
-  const pageBooks = sorted.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const totalPages = Math.ceil(totalBooks / PER_PAGE);
 
   return (
     <div className="flex min-h-screen bg-[#06040d] font-sans text-gray-100 overflow-x-hidden">
@@ -263,14 +317,26 @@ function SearchResultsInner() {
                   )}
                 </h1>
                 <p className="text-gray-500 text-xs font-semibold mt-1.5 uppercase tracking-wider">
-                  {sorted.length} {sorted.length === 1 ? "book" : "books"} found
+                  {totalBooks} {totalBooks === 1 ? "book" : "books"} found
                   {query ? ` for "${query}"` : " in catalog"}
                 </p>
               </div>
               <SortDropdown value={sort} onChange={handleSort} />
             </div>
 
-            {sorted.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {Array(8).fill(null).map((_, i) => (
+                  <div key={i} className="flex flex-col animate-pulse">
+                    <div className="w-full aspect-[2/3] rounded-xl bg-white/5 border border-white/5" />
+                    <div className="mt-3 space-y-2">
+                      <div className="h-3 bg-white/10 rounded w-5/6" />
+                      <div className="h-2.5 bg-white/5 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : sorted.length === 0 ? (
               /* ── Not Found Empty State ── */
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 {/* Animated icon */}
@@ -311,17 +377,20 @@ function SearchResultsInner() {
               <>
                 {/* Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {pageBooks.map((book) => (
+                  {sorted.map((book) => (
                     <BookCard key={book.id} book={book} onOpen={setSelectedBook} />
                   ))}
                 </div>
 
                 {/* Pagination */}
-                <Pagination currentPage={currentPage} totalPages={totalPages} onPage={setCurrentPage} />
-
-                <p className="text-center text-gray-500 text-[11px] font-medium mt-6">
-                  Page {currentPage} of {totalPages} · Showing {Math.min((currentPage - 1) * PER_PAGE + 1, sorted.length)}–{Math.min(currentPage * PER_PAGE, sorted.length)} of {sorted.length} books
-                </p>
+                {totalPages > 1 && (
+                  <>
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPage={setCurrentPage} />
+                    <p className="text-center text-gray-500 text-[11px] font-medium mt-6">
+                      Page {currentPage} of {totalPages} · Showing {Math.min((currentPage - 1) * PER_PAGE + 1, totalBooks)}–{Math.min(currentPage * PER_PAGE, totalBooks)} of {totalBooks} books
+                    </p>
+                  </>
+                )}
               </>
             )}
           </div>
