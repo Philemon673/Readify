@@ -47,7 +47,7 @@ pipeline {
       steps {
         sh "docker stop my-website-frontend || true"
         sh "docker rm my-website-frontend || true"
-        sh "docker run -d -p 3000:3000 --name my-website-frontend ${FRONTEND_IMAGE}"
+        sh "docker run -d -p 3001:3000 --name my-website-frontend ${FRONTEND_IMAGE}"
       }
     }
   }
